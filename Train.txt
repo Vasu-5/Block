@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Ticket Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            width: 100%; /* Full-width button */
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: -8px;
+            margin-bottom: 8px;
+        }
+        #passengerDetails {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Train Ticket Booking</h2>
+    <form id="bookingForm" onsubmit="return validateForm(event)">
+        <div class="form-group">
+            <label for="source">Source Station:</label>
+            <input type="text" id="source" name="source" required>
+            <div id="sourceError" class="error"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="destination">Destination Station:</label>
+            <input type="text" id="destination" name="destination" required>
+            <div id="destinationError" class="error"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="date">Travel Date:</label>
+            <input type="date" id="date" name="date" required>
+            <div id="dateError" class="error"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="class">Class:</label>
+            <select id="class" name="class" required>
+                <option value="">Select Class</option>
+                <option value="1A">First AC</option>
+                <option value="2A">Second AC</option>
+                <option value="3A">Third AC</option>
+                <option value="SL">Sleeper</option>
+            </select>
+            <div id="classError" class="error"></div>
+        </div>
+
+        <div class="form-group">
+            <label for="tickets">Number of Tickets (max 6):</label>
+            <input type="number" id="tickets" name="tickets" min="1" max="6" required onchange="generatePassengerFields()">
+            <div id="ticketsError" class="error"></div>
+        </div>
+
+        <div id="passengerDetails">
+            <h3>Passenger Details</h3>
+            <!-- Dynamic passenger fields will be added here -->
+        </div>
+
+        <button type="submit">Book Tickets</button>
+    </form>
+
+    <script>
+        const dateInput = document.getElementById('date');
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.min = today;
+
+        function generatePassengerFields() {
+            const numTickets = document.getElementById('tickets').value;
+            const passengerDetails = document.getElementById('passengerDetails');
+
+            // Clear existing fields
+            passengerDetails.innerHTML = '<h3>Passenger Details</h3>';
+
+            // Generate new fields
+            for (let i = 0; i < numTickets; i++) {
+                const div = document.createElement('div');
+                div.className = 'passenger-field form-group';
+                div.innerHTML = `
+                    <label for="passenger${i}">Passenger ${i + 1} Name:</label>
+                    <input type="text" id="passenger${i}" name="passenger${i}" required>
+                    <div id="passenger${i}Error" class="error"></div>
+                    
+                    <label for="age${i}">Age:</label>
+                    <input type="number" id="age${i}" name="age${i}" min="1" max="120" required>
+                    <div id="age${i}Error" class="error"></div>
+                    
+                    <label for="gender${i}">Gender:</label>
+                    <select id="gender${i}" name="gender${i}" required>
+                        <option value="">Select Gender</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                        <option value="O">Other</option>
+                    </select>
+                    <div id="gender${i}Error" class="error"></div>
+                `;
+                passengerDetails.appendChild(div);
+            }
+        }
+
+        function validateForm(event) {
+            event.preventDefault();
+            let isValid = true;
+            const errors = {};
+
+            const source = document.getElementById('source').value.trim();
+            const destination = document.getElementById('destination').value.trim();
+
+            if (!source) {
+                errors.sourceError = 'Source station is required';
+                isValid = false;
+            }
+
+            if (!destination) {
+                errors.destinationError = 'Destination station is required';
+                isValid = false;
+            }
+
+            if (source.toLowerCase() === destination.toLowerCase()) {
+                errors.destinationError = 'Source and destination cannot be the same';
+                isValid = false;
+            }
+
+            const dateValue = document.getElementById('date').value;
+            const selectedDate = new Date(dateValue);
+            if (selectedDate < new Date(today)) {
+                errors.dateError = 'Please select a future date';
+                isValid = false;
+            }
+
+            const numTickets = parseInt(document.getElementById('tickets').value, 10);
+            if (numTickets < 1 || numTickets > 6) {
+                errors.ticketsError = 'Number of tickets must be between 1 and 6';
+                isValid = false;
+            }
+
+            // Validate class selection
+            const classValue = document.getElementById('class').value;
+            if (!classValue) {
+                errors.classError = 'Please select a class';
+                isValid = false;
+            }
+
+            for (let i = 0; i < numTickets; i++) {
+                const name = document.getElementById(`passenger${i}`).value.trim();
+                const age = parseInt(document.getElementById(`age${i}`).value, 10);
+                const gender = document.getElementById(`gender${i}`).value;
+
+                if (!name) {
+                    errors[`passenger${i}Error`] = 'Passenger name is required';
+                    isValid = false;
+                }
+                if (age < 1 || age > 120) {
+                    errors[`age${i}Error`] = 'Please enter a valid age';
+                    isValid = false;
+                }
+                if (!gender) {
+                    errors[`gender${i}Error`] = 'Please select gender';
+                    isValid = false;
+                }
+            }
+
+            Object.keys(errors).forEach(key => {
+                const errorDiv = document.getElementById(key);
+                if (errorDiv) {
+                    errorDiv.textContent = errors[key];
+                }
+            });
+
+            if (isValid) {
+                alert('Booking successful! Ticket details will be sent to your email.');
+                document.getElementById('bookingForm').reset();
+                document.getElementById('passengerDetails').innerHTML = '<h3>Passenger Details</h3>';
+            }
+        }
+    </script>
+</body>
+</html>
